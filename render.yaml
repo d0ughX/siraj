@@ -1,0 +1,14 @@
+# SIRAJ — Render service definition (skeleton, paper-only).
+# Create a Worker (not a Web service): the engine has no public HTTP surface
+# in the skeleton, which keeps the attack surface minimal.
+services:
+  - type: worker
+    name: siraj-paper-engine
+    env: python
+    buildCommand: "pip install --no-cache-dir -r requirements.txt || true"
+    startCommand: "python3 -m siraj.paper_engine --fixtures tests/fixtures/sample_candles.json"
+    envVars:
+      - key: SIRAJ_MODE
+        value: paper
+      - key: SIRAJ_RULES_VERSION
+        value: "0.1"

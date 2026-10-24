@@ -1,0 +1,2 @@
+# SIRAJ skeleton: standard library only. No dependencies by design.
+# (This file exists so Render's build step has something explicit to run.)

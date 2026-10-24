@@ -1,0 +1,75 @@
+# SIRAJ frozen rules v0.1 — 2026-10-24
+# Changing ANY value here = a new rule version. New versions must pass the
+# research-qualification gates (blueprint v2 §9) + owner approval before use.
+# Nothing in this file is a profitability promise.
+version: "0.1"
+name: "SIRAJ"
+
+account:
+  starting_pot_usd: 10.0
+  pot_is_account_only: true      # never pull from bank / debit / margin accounts
+  auto_compound: true            # until owner says stop / take profit
+  margin_enabled: false          # default OFF; "very profitable" bar to enable
+
+dial:
+  # baseline: moderately aggressive
+  target_vol_annual: 0.12
+  per_trade_risk: 0.01           # 1% of equity
+  max_open_risk: 0.06            # portfolio heat cap
+  levels:
+    less_aggressive: { target_vol_annual: 0.08, per_trade_risk: 0.005, max_open_risk: 0.04 }
+    moderately_aggressive: { target_vol_annual: 0.12, per_trade_risk: 0.01, max_open_risk: 0.06 }
+    more_aggressive: { target_vol_annual: 0.18, per_trade_risk: 0.015, max_open_risk: 0.09 }
+  per_trade_risk_ceiling: 0.02   # Turtle ceiling, never exceeded
+
+sleeves:  # risk weights; sleeves 1+2 combined cap 50% if correlation > 0.70
+  intraday_trend: 0.40
+  cross_pair_momentum: 0.35
+  session_breakout: 0.25
+  max_single_pair_risk: 0.30
+  correlation_cap: 0.70
+
+fees:  # Kraken Pro, schedule from 2026-07-09, starting tier
+  tier1_maker: 0.0040
+  tier1_taker: 0.0080
+  stablecoin_per_side: 0.0020
+  maker_round_trip_hurdle: 0.0080   # must clear to earn size (maker)
+  taker_round_trip_hurdle: 0.0160   # must clear if the trade must take
+
+trades:
+  reward_to_risk_target: 5.0     # $1 risk to make $5
+  precise_only: true             # entry + stop + target + time stop required
+  volume_filter: true            # pair-agnostic; volume + spread thresholds gate entry
+  min_24h_volume_usd: 1000000
+  max_spread_pct: 0.002
+  maker_first: true
+  never_average_losers: true
+  never_double_after_loss: true
+
+win_ladder:
+  wins_to_step_up: 10            # TOTAL wins, not consecutive
+  consecutive_losses_to_reset: 3 # window restarts; win count -> 0
+  step_down_on_negative_week: true
+
+daily_stop:
+  enabled: true
+  restart_by_owner_only: true    # no auto-restart, no silent next-morning resume
+  daily_loss_cap_pct: 0.03       # of equity; hit = stop for the day (frozen v0.1 value)
+
+kill_switches:
+  sleeve_halve_at: -0.10
+  sleeve_freeze_at: -0.15
+  sleeve_flat_at: -0.20
+  portfolio_halve_dial_month: -0.10
+  portfolio_stop_new_risk_month: -0.15
+  portfolio_flat_month: -0.20
+
+sessions:  # regimes, not on/off switches; IANA zones, never hardcoded UTC offsets
+  london_ny_overlap_et: ["08:00", "12:00"]
+  breakout_full_window_et: ["03:00", "12:00"]
+  asia_breakout_size_factor: 0.5
+  weekend_mode: { start_et: "Fri 16:00", end_et: "Sun 18:00", size_factor: 0.5 }
+  event_blackouts_et:
+    - { event: "US CPI/NFP", window: ["08:15", "09:00"] }
+    - { event: "FOMC", window: ["13:45", "15:00"] }
+  no_market_orders_first_minutes: 5
